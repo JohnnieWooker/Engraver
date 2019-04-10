@@ -2,7 +2,7 @@ bl_info = {
     "name": "Engraver",
     "author":  "Lukasz Hoffmann <https://www.artstation.com/artist/lukaszhoffmann>",
     "version": (0, 28, 0),
-    "blender": (2, 79, 0),
+    "blender": (2, 80, 0),
     "location": "",
     "description":"",
     "category": "Object"}
@@ -13,7 +13,6 @@ import bmesh
 import mathutils
 from mathutils import Vector
 
-depth=0.2
 smooth=True
 sharp=True
 threshold=0.001
@@ -35,8 +34,8 @@ def mirror(dupli,inversion_correction,apply_dt_mod,axis):
         for parent_o in selected:
             oldobname=parent_o.name   
             bpy.ops.object.select_all(action='DESELECT')
-            bpy.context.scene.objects.active=parent_o
-            parent_o.select=True
+            bpy.context.view_layer.objects.active=parent_o
+            parent_o.select_set(state=True)
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.separate(type='LOOSE')
             bpy.ops.object.mode_set(mode='OBJECT')
@@ -46,24 +45,24 @@ def mirror(dupli,inversion_correction,apply_dt_mod,axis):
             for o in internal_selected:
                 oldobjects.append(o)
                 bpy.ops.object.select_all(action='DESELECT')
-                bpy.context.scene.objects.active=o      
-                o.select = True
+                bpy.context.view_layer.objects.active=o      
+                o.select_set(state=True)
                 if dupli:
-                    bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "constraint_orientation":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
+                    bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate=None)
                 if axis=='Y':
-                    bpy.ops.transform.resize(value=(1, -1, 1), constraint_axis=(False, True, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)
+                    bpy.ops.transform.resize(value=(1, -1, 1), constraint_axis=(False, True, False), orient_type='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)
                 if axis=='X':
-                    bpy.ops.transform.resize(value=(-1, 1, 1), constraint_axis=(True, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)    
+                    bpy.ops.transform.resize(value=(-1, 1, 1), constraint_axis=(True, False, False), orient_type='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)    
                 if axis=='Z':
-                    bpy.ops.transform.resize(value=(1, 1, -1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)
+                    bpy.ops.transform.resize(value=(1, 1, -1), constraint_axis=(False, False, True), orient_type='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)
                     
-                OBJ=bpy.context.scene.objects.active
+                OBJ=bpy.context.view_layer.objects.active
                 newobjects.append(OBJ)
-                bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "constraint_orientation":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
-                OBJ_source=bpy.context.scene.objects.active                
+                bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "orient_type":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
+                OBJ_source=bpy.context.view_layer.objects.active                
                 bpy.ops.object.select_all(action='DESELECT')
-                bpy.context.scene.objects.active=OBJ
-                OBJ.select = True
+                bpy.context.view_layer.objects.active=OBJ
+                OBJ.select_set(state=True)
                 if inversion_correction:
                     bpy.ops.object.mode_set(mode='EDIT')
                     bpy.ops.mesh.reveal()
@@ -78,32 +77,32 @@ def mirror(dupli,inversion_correction,apply_dt_mod,axis):
                 modifier.data_types_loops={'CUSTOM_NORMAL'}
                 if apply_dt_mod:           
                     bpy.ops.object.modifier_apply(modifier=modifier.name)
-                    bpy.data.objects.remove(OBJ_source, True)
+                    bpy.data.objects.remove(OBJ_source)
             bpy.ops.object.select_all(action='DESELECT')
             try:
-                bpy.context.scene.objects.active=oldobjects[0]
+                bpy.context.view_layer.objects.active=oldobjects[0]
             except:
                 print("Object is empty")  
             for o in oldobjects:
-                o.select=True
+                o.select_set(state=True)
                 print(o.name)
-            bpy.context.scene.objects.active.name=oldobname                    
+            bpy.context.view_layer.objects.active.name=oldobname                    
             bpy.ops.object.join()        
             bpy.ops.object.select_all(action='DESELECT')
             try:
-                bpy.context.scene.objects.active=newobjects[0]
+                bpy.context.view_layer.objects.active=newobjects[0]
             except:
                 print("Object is empty")  
             for o in newobjects:
-                o.select=True
+                o.select_set(state=True)
                 print(o.name)                
             bpy.ops.object.join()    
         return {'FINISHED'}   
 
 def fillvect(OBJvect):
     bpy.ops.object.select_all(action='DESELECT')
-    OBJvect.select=True
-    bpy.context.scene.objects.active=OBJvect
+    OBJvect.select_set(state=True)
+    bpy.context.view_layer.objects.active=OBJvect
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_mode(type="VERT") 
     bpy.ops.mesh.reveal()
@@ -139,12 +138,12 @@ def pit(p,a,b,c):
 
 def makecage(OBJ,thick):
     bpy.ops.object.select_all(action='DESELECT')
-    OBJ.select=True
-    bpy.context.scene.objects.active=OBJ
+    OBJ.select_set(state=True)
+    bpy.context.view_layer.objects.active=OBJ
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)    
     OBJcage= OBJ.copy()
     OBJcage.data = OBJ.data.copy() 
-    bpy.context.scene.objects.link(OBJcage)
+    bpy.context.scene.collection.objects.link(OBJcage)
     #inflating cage mesh
     mod_solid = OBJcage.modifiers.new("SOLIDIFY", 'SOLIDIFY')
     mod_solid.thickness=thick    
@@ -152,8 +151,8 @@ def makecage(OBJ,thick):
     mod_displace=OBJcage.modifiers.new("DISPLACE", 'DISPLACE') 
     mod_displace.mid_level=1-thick/2    
     bpy.ops.object.select_all(action='DESELECT')
-    OBJcage.select=True
-    bpy.context.scene.objects.active=OBJcage
+    OBJcage.select_set(state=True)
+    bpy.context.view_layer.objects.active=OBJcage
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.reveal()
     bpy.ops.mesh.select_all(action='SELECT')
@@ -161,7 +160,7 @@ def makecage(OBJ,thick):
     mod_displace.strength=0.2   
     bpy.ops.object.modifier_apply(modifier=mod_solid.name)
     bpy.ops.object.modifier_apply(modifier=mod_displace.name)   
-    OBJcage.hide=True
+    OBJcage.hide_viewport=True
     bpy.ops.object.select_all(action='DESELECT')
     return OBJcage
 
@@ -198,15 +197,15 @@ def vertsinside(OBJsurf,OBJcage):
             verts_to_rem_id.append(v.index)
             for l in v.link_edges:
                 for i in l.verts:
-                    verts.append(i.co*mat)
+                    verts.append(mat@i.co)
                     for il in i.link_edges:
                         for ii in il.verts:
-                            verts.append(ii.co*mat)
+                            verts.append(mat@ii.co)
     return verts, verts_to_rem, verts_to_rem_id   
 
 def smartbool(operation):
     if len(bpy.context.selected_objects)==2 and bpy.context.active_object.mode=='OBJECT':
-        OBJdest=bpy.context.scene.objects.active
+        OBJdest=bpy.context.view_layer.objects.active
         OBJactor=bpy.context.selected_objects[0]
         if OBJdest==OBJactor:
             OBJactor=bpy.context.selected_objects[1]    
@@ -214,24 +213,26 @@ def smartbool(operation):
         #create destination duplicate normal source            
         OBJdest_source=OBJdest.copy()
         OBJdest_source.data = OBJdest.data.copy()
-        bpy.context.scene.objects.link(OBJdest_source)
-        OBJdest_source.hide=True
+        bpy.context.scene.collection.objects.link(OBJdest_source)
+        OBJdest_source.hide_viewport=True
         
          #create actor duplicate normal source            
         OBJactor_source=OBJactor.copy()
         OBJactor_source.data = OBJactor.data.copy()
-        bpy.context.scene.objects.link(OBJactor_source)        
-        OBJactor_source.hide=True
+        bpy.context.scene.collection.objects.link(OBJactor_source)        
+        OBJactor_source.hide_viewport=True
         
         #select all in destination
-        OBJdest.select=True   
-        bpy.context.scene.objects.active=OBJdest
+        bpy.ops.object.select_all(action='DESELECT')
+        OBJdest.select_set(state=True)   
+        bpy.context.view_layer.objects.active=OBJdest
         bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_all(action='SELECT')        
+        bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.object.mode_set(mode='OBJECT')
         #deselect all in actor
-        OBJactor.select=True   
-        bpy.context.scene.objects.active=OBJactor
+        bpy.ops.object.select_all(action='DESELECT')
+        OBJactor.select_set(state=True)   
+        bpy.context.view_layer.objects.active=OBJactor
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -244,18 +245,18 @@ def smartbool(operation):
         #invert actor if boolean operation is difference
         if operation=='DIFFERENCE':
             bpy.ops.object.select_all(action='DESELECT')
-            OBJactor_source.hide=False
-            OBJactor_source.select=True   
-            bpy.context.scene.objects.active=OBJactor_source         
+            OBJactor_source.hide_viewport=False
+            OBJactor_source.select_set(state=True)   
+            bpy.context.view_layer.objects.active=OBJactor_source         
             mirror(False,False,True,'X')            
-            bpy.ops.transform.resize(value=(-1, 1, 1), constraint_axis=(True, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)    
+            bpy.ops.transform.resize(value=(-1, 1, 1), constraint_axis=(True, False, False), orient_type='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)    
             bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)            
-            OBJactor_source.hide=True
-            OBJdest_source.hide=True
+            OBJactor_source.hide_viewport=True
+            OBJdest_source.hide_viewport=True
         #collapse mod
         bpy.ops.object.select_all(action='DESELECT')
-        OBJdest.select=True   
-        bpy.context.scene.objects.active=OBJdest
+        OBJdest.select_set(state=True)   
+        bpy.context.view_layer.objects.active=OBJdest
         bpy.ops.object.modifier_apply(modifier=mod_boolean.name)        
         matrix_dest_source=OBJdest_source.matrix_world.to_translation()
         matrix_actor_source=OBJactor_source.matrix_world.to_translation()
@@ -263,9 +264,9 @@ def smartbool(operation):
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_mode(type="FACE") 
         dest_verts = [i.index for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
-        dest_verts_co=[mats*i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
+        dest_verts_co=[mats@i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
         if sharp:
-            bpy.ops.mesh.separate(type='SELECTED')
+            bpy.ops.mesh.separate(type='SELECTED')            
             bpy.ops.mesh.select_mode(type="VERT") 
             for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts:
                 if i.co in dest_verts_co:
@@ -279,22 +280,22 @@ def smartbool(operation):
             bpy.ops.mesh.select_mode(type="VERT")             
             mats=bpy.context.active_object.matrix_world
             actor_verts = [i.index for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
-            actor_verts_co = [mats*i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]    
+            actor_verts_co = [mats@i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]    
             bpy.ops.mesh.hide(unselected=False)
             
             for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts:
                 for j in actor_verts_co: 
-                    if similar(mats*i.co,j):
+                    if similar(mats@i.co,j):
                         i.select=True
             bpy.ops.mesh.select_linked(delimit={'SHARP'})
             dest_verts = [i.index for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
-            dest_verts_co=[mats*i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
+            dest_verts_co=[mats@i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
             bpy.ops.mesh.reveal()
         
         if not sharp:    
             bpy.ops.mesh.select_all(action='INVERT')
             actor_verts = [i.index for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
-            actor_verts_co = [mats*i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
+            actor_verts_co = [mats@i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
         
         #removing redundant vertex group
         vg_old = OBJdest.vertex_groups.get('Normal_Transfer_Dest')
@@ -313,16 +314,16 @@ def smartbool(operation):
         
         #clearing redundant poly inside actor source mesh
         bpy.ops.object.select_all(action='DESELECT')
-        OBJactor_source.hide=False
-        OBJactor_source.select=True   
-        bpy.context.scene.objects.active=OBJactor_source
+        OBJactor_source.hide_viewport=False
+        OBJactor_source.select_set(state=True)   
+        bpy.context.view_layer.objects.active=OBJactor_source
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='DESELECT')
         mats=bpy.context.active_object.matrix_world
         bm=bmesh.from_edit_mesh(bpy.context.active_object.data).verts   
         
         for i in bm:
-            print(mats*i.co)
+            print(mats@i.co)
         print('sec')    
         for i in actor_verts_co:
             print(i)  
@@ -331,7 +332,7 @@ def smartbool(operation):
             count=0
             index=0            
             for j in actor_verts_co:
-                if  similar(mats*i.co,j):                    
+                if  similar(mats@i.co,j):                    
                     count=count+1 
                 if count==1:
                     i.select=True
@@ -344,21 +345,21 @@ def smartbool(operation):
         bpy.ops.mesh.select_all(action='INVERT')
         bpy.ops.mesh.delete(type='VERT')
         bpy.ops.object.mode_set(mode='OBJECT') 
-        OBJactor_source.hide=True
+        OBJactor_source.hide_viewport=True
         
                 
         #clearing redundant poly inside destination source mesh
         bpy.ops.object.select_all(action='DESELECT')
-        OBJdest_source.hide=False
-        OBJdest_source.select=True   
-        bpy.context.scene.objects.active=OBJdest_source
+        OBJdest_source.hide_viewport=False
+        OBJdest_source.select_set(state=True)   
+        bpy.context.view_layer.objects.active=OBJdest_source
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='DESELECT')
         mats=bpy.context.active_object.matrix_world
         bm=bmesh.from_edit_mesh(bpy.context.active_object.data).verts  
         """
         for i in bm:
-            print(mats*i.co)
+            print(mats@i.co)
         print("sec")    
         for i in dest_verts_co:
             print(i) 
@@ -367,7 +368,7 @@ def smartbool(operation):
             count=0
             index=0
             for j in dest_verts_co:
-                if  similar(mats*i.co,j):                    
+                if  similar(mats@i.co,j):                    
                     count=count+1 
                 if count==1:
                     i.select=True
@@ -379,12 +380,12 @@ def smartbool(operation):
         bpy.ops.mesh.select_all(action='INVERT')
         bpy.ops.mesh.delete(type='VERT')
         bpy.ops.object.mode_set(mode='OBJECT') 
-        OBJdest_source.hide=True
+        OBJdest_source.hide_viewport=True
         
         #sharpen intersection
         bpy.ops.object.select_all(action='DESELECT')
-        OBJdest.select=True   
-        bpy.context.scene.objects.active=OBJdest
+        OBJdest.select_set(state=True)   
+        bpy.context.view_layer.objects.active=OBJdest
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='DESELECT')
         bpy.ops.mesh.select_mode(type="EDGE") 
@@ -395,13 +396,13 @@ def smartbool(operation):
         mod_DataTransfer_actor.use_loop_data=True        
         mod_DataTransfer_actor.data_types_loops={'CUSTOM_NORMAL'} 
         mod_DataTransfer_actor.loop_mapping = interpolation
-        mod_DataTransfer_actor.vertex_group = vg_actor.name      
-        if smooth:          
+        mod_DataTransfer_actor.vertex_group = vg_actor.name   
+        if smooth:             
             bpy.context.active_object.data.use_auto_smooth = 1
             bpy.context.active_object.data.auto_smooth_angle=180 
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier=mod_DataTransfer_actor.name)
-        OBJactor_source.hide=False
-        bpy.data.objects.remove(OBJactor_source, True)
+        OBJactor_source.hide_viewport=False
+        bpy.data.objects.remove(OBJactor_source)
         
         #passing normals from destination
         mod_DataTransfer_actor = bpy.context.active_object.modifiers.new("DATATRANSFER", 'DATA_TRANSFER')
@@ -411,8 +412,8 @@ def smartbool(operation):
         mod_DataTransfer_actor.loop_mapping = interpolation
         mod_DataTransfer_actor.vertex_group = vg_dest.name
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier=mod_DataTransfer_actor.name)
-        OBJdest_source.hide=False
-        bpy.data.objects.remove(OBJdest_source, True)
+        OBJdest_source.hide_viewport=False
+        bpy.data.objects.remove(OBJdest_source)
         
     return{'FINISHED'}
 
@@ -456,40 +457,19 @@ class jwmirrorz(bpy.types.Operator):
     bl_label="Z"
     def execute(self,context):
         mirror(False,True,True,'Z')
-        return{'FINISHED'}                  
+        return{'FINISHED'} 
     
-class jwbooleans(bpy.types.Menu):
-    bl_idname="jw.booleans"
-    bl_label="Booleans"
-    def draw(self, context):        
-        layout = self.layout
-        layout.label("Booleans")
-        layout.operator(jwbooldiff.bl_idname)
-        layout.operator(jwboolunion.bl_idname)
-        layout.operator(jwboolintersect.bl_idname)
-        
-class jwmirrors(bpy.types.Menu):
-    bl_idname="jw.mirrors"
-    bl_label="Mirror"
-    def draw(self, context):        
-        layout = self.layout
-        layout.label("Mirror")
-        layout.operator(jwmirrorx.bl_idname)    
-        layout.operator(jwmirrory.bl_idname)    
-        layout.operator(jwmirrorz.bl_idname)
-        
 class jwsettings(bpy.types.Menu):
     bl_idname="jw.settings"
     bl_label="Settings"
     def draw(self, context):        
         layout = self.layout
-        layout.label("Settings")  
-        layout.prop(context.scene, "depth_prop")         
-
+        layout.prop(context.scene, "depth_prop")       
+    
 def separate(self,OBJvect):
     bpy.ops.object.select_all(action='DESELECT')
-    OBJvect.select=True  
-    bpy.context.scene.objects.active=OBJvect
+    OBJvect.select_set(state=True)  
+    bpy.context.view_layer.objects.active=OBJvect
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.reveal()    
     bpy.ops.mesh.separate(type='LOOSE')
@@ -499,16 +479,16 @@ def separate(self,OBJvect):
 def addalltovg(OBJsurf):    
     all_verts=[]
     bpy.ops.object.select_all(action='DESELECT')
-    OBJsurf.select=True  
-    bpy.context.scene.objects.active=OBJsurf
+    OBJsurf.select_set(state=True)  
+    bpy.context.view_layer.objects.active=OBJsurf
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.reveal()
     bpy.ops.mesh.select_all(action='SELECT')
     vg_old = OBJsurf.vertex_groups.get('All_Old')
     if vg_old is not None:
         OBJsurf.vertex_groups.remove(vg_old)
-    all_verts = [i.index for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]      
-    vg = bpy.context.active_object.vertex_groups.new(name="All_Old")
+    all_verts = [i.index for i in bmesh.from_edit_mesh(bpy.context.view_layer.objects.active.data).verts if i.select]      
+    vg = bpy.context.view_layer.objects.active.vertex_groups.new(name="All_Old")
     bpy.ops.object.mode_set(mode='OBJECT') 
     vg.add(all_verts, 1.0, 'ADD')        
     return vg
@@ -521,12 +501,13 @@ class jwinsertoperator(bpy.types.Operator):
     def invoke(self,context,event):
         if len(bpy.context.selected_objects)==2 and bpy.context.active_object.mode=='OBJECT':    
             #bpy.ops.object.transform_apply(location=True, rotation=True, scale=False) 
-            OBJsurf=bpy.context.scene.objects.active
+            OBJsurf=bpy.context.view_layer.objects.active
             OBJvect=bpy.context.selected_objects[0]
             if OBJsurf==OBJvect:
                 OBJvect=bpy.context.selected_objects[1]
             #separate decal
             decals=separate(self,OBJvect)
+                  
             
             for OBJvect in decals:
 
@@ -536,38 +517,38 @@ class jwinsertoperator(bpy.types.Operator):
                 #create duplicate normal source            
                 OBJsource=OBJsurf.copy()
                 OBJsource.data = OBJsurf.data.copy()
-                bpy.context.scene.objects.link(OBJsource)
+                bpy.context.scene.collection.objects.link(OBJsource)
                 self.OBJsource_NAME=OBJsource.name
-                OBJsource.hide=True            
+                OBJsource.hide_viewport=True            
                 bpy.ops.object.select_all(action='DESELECT')
-                OBJvect.select=True   
-                bpy.context.scene.objects.active=OBJvect
+                OBJvect.select_set(state=True)   
+                bpy.context.view_layer.objects.active=OBJvect
                 bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.reveal()
                 bpy.ops.mesh.select_all(action='DESELECT')
                 bpy.ops.mesh.select_mode(type="VERT") 
                 bpy.ops.mesh.select_non_manifold()
                 vmat=OBJvect.matrix_world
-                self.manifold_vect = [vmat*i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select] 
-                bpy.ops.mesh.duplicate_move(MESH_OT_duplicate={"mode":1}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "constraint_orientation":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
+                self.manifold_vect = [vmat@i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select] 
+                bpy.ops.mesh.duplicate_move(MESH_OT_duplicate={"mode":1}, TRANSFORM_OT_translate=None)
                 bpy.ops.mesh.fill()
                 bpy.ops.mesh.separate(type='SELECTED')
                 bpy.ops.object.mode_set(mode='OBJECT')
-                OBJvect.select=False
+                OBJvect.select_set(state=False)
                 OBJcagetemp=bpy.context.selected_objects[0]
                 thick=(((OBJsurf.dimensions[0]+OBJvect.dimensions[0])/2+(OBJsurf.dimensions[1]+OBJvect.dimensions[1])/2+(OBJsurf.dimensions[2]+OBJvect.dimensions[2])/2)/3)/10            
                 OBJcage=makecage(OBJcagetemp,thick) 
-                bpy.data.objects.remove(OBJcagetemp, True) 
+                bpy.data.objects.remove(OBJcagetemp) 
                 self.OBJcage_NAME=OBJcage.name
                 self.sens_multi=((OBJcage.dimensions[0]+OBJcage.dimensions[1]+OBJcage.dimensions[2])/3)*10
-                                
+                
                 #adding all vertices to vg for further detection of new ones
                 vg=addalltovg(OBJsurf)
                 
-                #deselect surface verts for  sake of proper detection of verts created by boolean operation                
+                #deselect surface verts for  sake of proper detection of verts created by boolean operation
                 bpy.ops.object.select_all(action='DESELECT')
-                OBJsurf.select=True  
-                bpy.context.scene.objects.active=OBJsurf
+                OBJsurf.select_set(state=True)  
+                bpy.context.view_layer.objects.active=OBJsurf
                 bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.select_all(action='DESELECT')
                 vlen_old=len(bmesh.from_edit_mesh(bpy.context.active_object.data).verts)
@@ -577,9 +558,9 @@ class jwinsertoperator(bpy.types.Operator):
                 bool_mod = OBJsurf.modifiers.new("BOOLEAN", 'BOOLEAN')
                 bool_mod.object=OBJcage
                 bool_mod.operation = 'DIFFERENCE'  
-                bool_mod.double_threshold=0           
-                bpy.ops.object.modifier_apply(apply_as='DATA', modifier=bool_mod.name)                
-                 
+                bool_mod.double_threshold=0                
+                bpy.ops.object.modifier_apply(apply_as='DATA', modifier=bool_mod.name) 
+                
                 #remove redundant geometry 
                 bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.delete(type='FACE') 
@@ -589,32 +570,32 @@ class jwinsertoperator(bpy.types.Operator):
                 OBJsurf.vertex_groups.active_index=vg.index
                 bpy.ops.object.vertex_group_select()
                 bpy.ops.mesh.select_all(action='INVERT')
-                self.manifold_surf=[mats*i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]                
-                    
+                self.manifold_surf=[mats@i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]     
+                        
                 #expanding selection to linked and ading verts to group        
                 bpy.ops.mesh.select_linked(delimit={'SHARP'})
                 bpy.ops.mesh.select_less()
-                self.normal_surf=[mats*i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
+                self.normal_surf=[mats@i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
                 bpy.ops.mesh.select_all(action='DESELECT')   
                 
                 #reselecting border vertices
                 for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts:
-                    if mats*i.co in self.manifold_surf:
-                        i.select=True 
-                        
+                    if mats@i.co in self.manifold_surf:
+                        i.select=True    
+                
                 #clearing vertex group
-                OBJsurf.vertex_groups.remove(vg)        
+                OBJsurf.vertex_groups.remove(vg)
                         
                 #clearing cage mesh
-                bpy.data.objects.remove(OBJcage, True)     
+                bpy.data.objects.remove(OBJcage)     
                 #cleared cage mesh
                                          
                 bpy.ops.object.mode_set(mode='OBJECT')
                 bpy.ops.object.select_all(action='DESELECT')
                     
                 #adding internal surface verts to vg
-                bpy.context.scene.objects.active=OBJvect
-                OBJvect.select=True
+                bpy.context.view_layer.objects.active=OBJvect
+                OBJvect.select_set(state=True)
                 bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.reveal()
                 bpy.ops.mesh.select_all(action='DESELECT')
@@ -624,9 +605,9 @@ class jwinsertoperator(bpy.types.Operator):
                 bpy.ops.object.mode_set(mode='OBJECT')
                 OBJ_source=bpy.data.objects[self.OBJsource_NAME]
                 bpy.ops.object.select_all(action='DESELECT') 
-                OBJvect.select=True
-                OBJsurf.select=True
-                bpy.context.scene.objects.active=OBJsurf
+                OBJvect.select_set(state=True)
+                OBJsurf.select_set(state=True)
+                bpy.context.view_layer.objects.active=OBJsurf
                 bpy.ops.object.join()
                 bpy.ops.object.mode_set(mode='EDIT')   
                 
@@ -636,7 +617,7 @@ class jwinsertoperator(bpy.types.Operator):
                     OBJsurf.vertex_groups.remove(vg_old)
                 
                 #adding selected to vg and filling gap 
-                verts = [i.index for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select or mats*i.co in self.normal_surf]      
+                verts = [i.index for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select or mats@i.co in self.normal_surf]      
                 vg = bpy.context.active_object.vertex_groups.new(name="Normal_Transfer")
                 bpy.ops.mesh.normals_make_consistent(inside=False)
                 bpy.ops.mesh.fill()
@@ -650,14 +631,14 @@ class jwinsertoperator(bpy.types.Operator):
                 mod_DataTransfer.use_loop_data=True
                 mod_DataTransfer.data_types_loops={'CUSTOM_NORMAL'} 
                 mod_DataTransfer.loop_mapping = 'POLYINTERP_NEAREST'
-                mod_DataTransfer.vertex_group = vg.name   
-                if smooth:             
+                mod_DataTransfer.vertex_group = vg.name  
+                if smooth:              
                     bpy.ops.object.shade_smooth()
                     bpy.context.active_object.data.use_auto_smooth = 1
                     bpy.context.active_object.data.auto_smooth_angle=180 
                 bpy.ops.object.modifier_apply(apply_as='DATA', modifier=mod_DataTransfer.name)
-                OBJ_source.hide=False
-                bpy.data.objects.remove(OBJ_source, True)
+                OBJ_source.hide_viewport=False
+                bpy.data.objects.remove(OBJ_source)
                 
                 #clearing vertex group
                 OBJsurf.vertex_groups.remove(vg)
@@ -668,15 +649,15 @@ class jwcutoperator(bpy.types.Operator):
     bl_label="Cut"  
     def invoke(self,context,event):
         if len(bpy.context.selected_objects)==2 and bpy.context.active_object.mode=='OBJECT':
-            OBJsurf=bpy.context.scene.objects.active
+            OBJsurf=bpy.context.view_layer.objects.active
             OBJvect=bpy.context.selected_objects[0]
             if OBJsurf==OBJvect:
                 OBJvect=bpy.context.selected_objects[1] 
             decals=separate(self,OBJvect) 
             for OBJvect in decals:
                 bpy.ops.object.select_all(action='DESELECT')
-                OBJvect.select=True   
-                bpy.context.scene.objects.active=OBJvect
+                OBJvect.select_set(state=True) 
+                bpy.context.view_layer.objects.active=OBJvect
                 bpy.ops.object.mode_set(mode='EDIT')   
                 bpy.ops.mesh.select_mode(type="VERT") 
                 bpy.ops.mesh.select_all(action='SELECT')
@@ -751,13 +732,13 @@ class jwcutoperator(bpy.types.Operator):
                     bpy.context.active_object.data.auto_smooth_angle=180 
                 bpy.ops.object.modifier_apply(apply_as='DATA', modifier=mod_DataTransfer.name)    
                 
-                OBJvect.select=False
+                OBJvect.select_set(state=False)
                 
                 #working on outer geometry
                 
                 #filling gap in outer ring
                 OBJvect=bpy.context.selected_objects[0]
-                bpy.context.scene.objects.active=OBJvect
+                bpy.context.view_layer.objects.active=OBJvect
                 bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.select_all(action='DESELECT')
                 bpy.ops.object.vertex_group_set_active(group='normal_insesitive')
@@ -767,12 +748,12 @@ class jwcutoperator(bpy.types.Operator):
                 #invoking engrave class
                 
                 bpy.ops.object.mode_set(mode='OBJECT')
-                OBJsurf.select=True
-                bpy.context.scene.objects.active=OBJsurf                
+                OBJsurf.select_set(state=True)
+                bpy.context.view_layer.objects.active=OBJsurf   
+                             
                 bpy.ops.jw.insert('INVOKE_DEFAULT')
                 
-        return{'FINISHED'}        
-
+        return{'FINISHED'}            
     
 class jwcarveoperator(bpy.types.Operator):    
     bl_idname="jw.carve"
@@ -820,7 +801,7 @@ class jwcarveoperator(bpy.types.Operator):
                             sel=False
                     if sel:
                         v.select=True                    
-                bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, delta/self.sensitivity*(-1)), "constraint_axis":(False, False, True), "constraint_orientation":'NORMAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})        
+                bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, delta/self.sensitivity*(-1)), "constraint_axis":(False, False, True), "orient_type":'NORMAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})        
                 self.phase=3
             self.sensitivity=1000/self.sens_multi*5
 
@@ -832,16 +813,17 @@ class jwcarveoperator(bpy.types.Operator):
                 OBJvect = bpy.data.objects[self.OBJvect_NAME]
                 OBJsurf = bpy.data.objects[self.OBJsurf_NAME]
                 OBJcage = bpy.data.objects[self.OBJcage_NAME]
-                OBJsurf.hide=False
-                                
+                OBJsurf.hide_viewport=False
+                
                 #adding all vertices to vg for further detection of new ones
                 bpy.ops.object.mode_set(mode='OBJECT')
                 vg=addalltovg(OBJsurf)
                 
                 #deselect surface verts for  sake of proper detection of verts created by boolean operation
+                bpy.ops.object.mode_set(mode='OBJECT')
                 bpy.ops.object.select_all(action='DESELECT')
-                OBJsurf.select=True  
-                bpy.context.scene.objects.active=OBJsurf
+                OBJsurf.select_set(state=True)  
+                bpy.context.view_layer.objects.active=OBJsurf
                 bpy.ops.object.mode_set(mode='EDIT')
                 vlen_old=len(bmesh.from_edit_mesh(bpy.context.active_object.data).verts)
                 bpy.ops.mesh.select_all(action='DESELECT')
@@ -853,34 +835,34 @@ class jwcarveoperator(bpy.types.Operator):
                 bool_mod.operation = 'DIFFERENCE'        
                 bool_mod.double_threshold=0    
                 bpy.ops.object.modifier_apply(apply_as='DATA', modifier=bool_mod.name)
-                
+            
                 #remove redundant geometry 
                 bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.delete(type='FACE') 
-            
+                
                 #selecting border vertices
                 mats=bpy.context.active_object.matrix_world
                 OBJsurf.vertex_groups.active_index=vg.index
                 bpy.ops.object.vertex_group_select()
                 bpy.ops.mesh.select_all(action='INVERT')
-                self.manifold_surf=[mats*i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
+                self.manifold_surf=[mats@i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
                 
                 #expanding selection to linked and ading verts to group        
                 bpy.ops.mesh.select_linked(delimit={'SHARP'})
                 bpy.ops.mesh.select_less()
-                self.normal_surf=[mats*i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
+                self.normal_surf=[mats@i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
                 bpy.ops.mesh.select_all(action='DESELECT')   
                 
                 #reselecting border vertices
                 for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts:
-                    if mats*i.co in self.manifold_surf:
+                    if mats@i.co in self.manifold_surf:
                         i.select=True
                 
                 #clearing vertex group
                 OBJsurf.vertex_groups.remove(vg)
                 
                 #clearing cage mesh
-                bpy.data.objects.remove(OBJcage, True)     
+                bpy.data.objects.remove(OBJcage)     
                 #cleared cage mesh
                 
                 bpy.ops.object.mode_set(mode='OBJECT')
@@ -892,8 +874,8 @@ class jwcarveoperator(bpy.types.Operator):
                     OBJsurf.vertex_groups.remove(vg_old)    
                     
                 #adding internal surface verts to vg
-                bpy.context.scene.objects.active=OBJvect
-                OBJvect.select=True
+                bpy.context.view_layer.objects.active=OBJvect
+                OBJvect.select_set(state=True)
                 bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.reveal()   
                 
@@ -910,14 +892,14 @@ class jwcarveoperator(bpy.types.Operator):
                 bpy.ops.object.mode_set(mode='OBJECT')
                 OBJ_source=bpy.data.objects[self.OBJsource_NAME]
                 bpy.ops.object.select_all(action='DESELECT') 
-                OBJvect.select=True
-                OBJsurf.select=True
-                bpy.context.scene.objects.active=OBJsurf
+                OBJvect.select_set(state=True)
+                OBJsurf.select_set(state=True)
+                bpy.context.view_layer.objects.active=OBJsurf
                 bpy.ops.object.join()
                 bpy.ops.object.mode_set(mode='EDIT')   
                 
                 #adding selected to vg and filling gap 
-                verts = [i.index for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select or mats*i.co in self.normal_surf]      
+                verts = [i.index for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select or mats@i.co in self.normal_surf]      
                 vg = bpy.context.active_object.vertex_groups[vgname]
                 bpy.ops.mesh.normals_make_consistent(inside=False)
                 bpy.ops.mesh.fill()
@@ -931,25 +913,25 @@ class jwcarveoperator(bpy.types.Operator):
                 mod_DataTransfer.use_loop_data=True
                 mod_DataTransfer.data_types_loops={'CUSTOM_NORMAL'} 
                 mod_DataTransfer.loop_mapping = 'POLYINTERP_NEAREST'
-                mod_DataTransfer.vertex_group = vg.name          
-                if smooth:      
+                mod_DataTransfer.vertex_group = vg.name    
+                if smooth:            
                     bpy.ops.object.shade_smooth()
                     bpy.context.active_object.data.use_auto_smooth = 1
                     bpy.context.active_object.data.auto_smooth_angle=180 
                 bpy.ops.object.modifier_apply(apply_as='DATA', modifier=mod_DataTransfer.name)
-                OBJ_source.hide=False
-                bpy.data.objects.remove(OBJ_source, True) 
+                OBJ_source.hide_viewport=False
+                bpy.data.objects.remove(OBJ_source)   
                 
                 #clearing vertex group
                 OBJsurf.vertex_groups.remove(vg)
-                          
+                        
                 self.phase=6
                 
             if self.phase==1: 
                 bpy.ops.mesh.select_mode(type="VERT")               
                 self.first_mouse_x = event.mouse_x            
                 self.face_selected_indices = [i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]               
-                bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"mirror":False}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, True), "constraint_orientation":'NORMAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
+                bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"mirror":False}, TRANSFORM_OT_translate=None)
                 self.selected = [i for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]
                 self.face_selected = [i for i in bmesh.from_edit_mesh(bpy.context.active_object.data).faces if i.select]                
                 if len(self.face_selected)>0:
@@ -972,7 +954,7 @@ class jwcarveoperator(bpy.types.Operator):
         if len(bpy.context.selected_objects)==2 and bpy.context.active_object.mode=='OBJECT':
             #bpy.ops.object.transform_apply(location=True, rotation=True, scale=False)
             self.first_mouse_x = event.mouse_x  
-            OBJsurf=bpy.context.scene.objects.active
+            OBJsurf=bpy.context.view_layer.objects.active
             OBJvect=bpy.context.selected_objects[0]
             self.OB_NAME=OBJvect.name
             if OBJsurf==OBJvect:
@@ -984,13 +966,13 @@ class jwcarveoperator(bpy.types.Operator):
             #create duplicate normal source            
             OBJsource=OBJsurf.copy()
             OBJsource.data = OBJsurf.data.copy()
-            bpy.context.scene.objects.link(OBJsource)
+            bpy.context.scene.collection.objects.link(OBJsource)
             self.OBJsource_NAME=OBJsource.name
-            OBJsource.hide=True
+            OBJsource.hide_viewport=True
             bpy.ops.object.select_all(action='DESELECT')
             fillvect(OBJvect)        
-            OBJvect.select=True
-            bpy.context.scene.objects.active=OBJvect
+            OBJvect.select_set(state=True)
+            bpy.context.view_layer.objects.active=OBJvect
             bpy.ops.object.modifier_apply(modifier=mod_shrinkwrap.name)
             thick=(((OBJsurf.dimensions[0]+OBJvect.dimensions[0])/2+(OBJsurf.dimensions[1]+OBJvect.dimensions[1])/2+(OBJsurf.dimensions[2]+OBJvect.dimensions[2])/2)/3)/10          
             OBJcage=makecage(OBJvect,thick) 
@@ -999,25 +981,43 @@ class jwcarveoperator(bpy.types.Operator):
             
             #Finding manifold verts fo further manipulation
             bpy.ops.object.select_all(action='DESELECT')    
-            OBJvect.select=True
-            bpy.context.scene.objects.active=OBJvect
-            OBJsurf.hide=True
+            OBJvect.select_set(state=True)
+            bpy.context.view_layer.objects.active=OBJvect
+            OBJsurf.hide_viewport=True
             bpy.ops.object.mode_set(mode='EDIT')              
             bpy.ops.mesh.reveal()
             bpy.ops.mesh.select_all(action='DESELECT')
             bpy.ops.mesh.select_non_manifold()
             vmat=OBJvect.matrix_world
-            self.manifold_vect = [vmat*i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]     
+            self.manifold_vect = [vmat@i.co for i in bmesh.from_edit_mesh(bpy.context.active_object.data).verts if i.select]     
             #Finished finding manifolds        
             
             bpy.ops.mesh.select_all(action='SELECT')  
             bpy.ops.mesh.inset(thickness=0)
             wm = context.window_manager
-            self._timer = wm.event_timer_add(0.1, context.window)
+            self._timer = wm.event_timer_add(0.1, window=context.window)
             wm.modal_handler_add(self)       
             return {'RUNNING_MODAL'}
         else:
             return {'FINISHED'}
+
+class jwbooleans(bpy.types.Menu):
+    bl_idname="jw.booleans"
+    bl_label="Booleans"
+    def draw(self, context):        
+        layout = self.layout
+        layout.operator(jwbooldiff.bl_idname)
+        layout.operator(jwboolunion.bl_idname)
+        layout.operator(jwboolintersect.bl_idname)
+        
+class jwmirrors(bpy.types.Menu):
+    bl_idname="jw.mirrors"
+    bl_label="Mirror"
+    def draw(self, context):        
+        layout = self.layout
+        layout.operator(jwmirrorx.bl_idname)    
+        layout.operator(jwmirrory.bl_idname)    
+        layout.operator(jwmirrorz.bl_idname)    
 
 class jwcarvermenu(bpy.types.Menu):
     bl_label="Engraver"
@@ -1026,17 +1026,18 @@ class jwcarvermenu(bpy.types.Menu):
         layout=self.layout
         layout.operator_context = "INVOKE_DEFAULT";
         layout.operator(jwinsertoperator.bl_idname)
-        layout.operator(jwcarveoperator.bl_idname)    
-        layout.operator(jwcutoperator.bl_idname)    
+        layout.operator(jwcarveoperator.bl_idname) 
+        layout.operator(jwcutoperator.bl_idname) 
         layout.menu(jwbooleans.bl_idname)
-        layout.menu(jwmirrors.bl_idname)
+        layout.menu(jwmirrors.bl_idname)        
         layout.menu(jwsettings.bl_idname) 
+ 
 
 addon_keymaps = []
 
 def register():
     bpy.utils.register_class(jwsettings)   
-    bpy.utils.register_class(jwcutoperator)   
+    bpy.utils.register_class(jwcutoperator) 
     bpy.utils.register_class(jwcarveoperator)   
     bpy.utils.register_class(jwcarvermenu)
     bpy.utils.register_class(jwinsertoperator)
@@ -1066,9 +1067,8 @@ def register():
     #bpy.ops.wm.call_menu(name="jw.carvermenu")
     addon_keymaps.append(km)
 
-def unregister():    
+def unregister():
     bpy.utils.unregister_class(jwsettings)
-    bpy.utils.unregister_class(jwcutoperator)
     bpy.utils.unregister_class(jwcarveoperator)
     bpy.utils.unregister_class(jwcarvermenu)
     bpy.utils.unregister_class(jwinsertoperator)
@@ -1081,7 +1081,6 @@ def unregister():
     bpy.utils.unregister_class(jwmirrory)  
     bpy.utils.unregister_class(jwmirrorz)  
     del bpy.types.Scene.axis_enum 
-    del bpy.types.Scene.depth_prop  
     km.keymap_items.remove(kmi)
     addon_keymaps.clear()
 
