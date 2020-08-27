@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Engraver",
     "author":  "Lukasz Hoffmann <https://www.artstation.com/artist/lukaszhoffmann>",
-    "version": (0, 28, 0),
+    "version": (0, 29, 0),
     "blender": (2, 79, 0),
     "location": "",
     "description":"",

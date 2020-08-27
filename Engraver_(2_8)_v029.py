@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Engraver",
     "author":  "Lukasz Hoffmann <https://www.artstation.com/artist/lukaszhoffmann>",
-    "version": (0, 28, 0),
+    "version": (0, 29, 0),
     "blender": (2, 80, 0),
     "location": "",
     "description":"",
@@ -50,15 +50,15 @@ def mirror(dupli,inversion_correction,apply_dt_mod,axis):
                 if dupli:
                     bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate=None)
                 if axis=='Y':
-                    bpy.ops.transform.resize(value=(1, -1, 1), constraint_axis=(False, True, False), orient_type='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)
+                    bpy.ops.transform.resize(value=(1, -1, 1), constraint_axis=(False, True, False), orient_type='GLOBAL', mirror=False)
                 if axis=='X':
-                    bpy.ops.transform.resize(value=(-1, 1, 1), constraint_axis=(True, False, False), orient_type='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)    
+                    bpy.ops.transform.resize(value=(-1, 1, 1), constraint_axis=(True, False, False), orient_type='GLOBAL', mirror=False)    
                 if axis=='Z':
-                    bpy.ops.transform.resize(value=(1, 1, -1), constraint_axis=(False, False, True), orient_type='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)
+                    bpy.ops.transform.resize(value=(1, 1, -1), constraint_axis=(False, False, True), orient_type='GLOBAL', mirror=False)
                     
                 OBJ=bpy.context.view_layer.objects.active
                 newobjects.append(OBJ)
-                bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "orient_type":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
+                bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "orient_type":'GLOBAL', "mirror":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
                 OBJ_source=bpy.context.view_layer.objects.active                
                 bpy.ops.object.select_all(action='DESELECT')
                 bpy.context.view_layer.objects.active=OBJ
@@ -249,7 +249,7 @@ def smartbool(operation):
             OBJactor_source.select_set(state=True)   
             bpy.context.view_layer.objects.active=OBJactor_source         
             mirror(False,False,True,'X')            
-            bpy.ops.transform.resize(value=(-1, 1, 1), constraint_axis=(True, False, False), orient_type='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='LINEAR', proportional_size=0.0630394)    
+            bpy.ops.transform.resize(value=(-1, 1, 1), constraint_axis=(True, False, False), orient_type='GLOBAL', mirror=False)    
             bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)            
             OBJactor_source.hide_viewport=True
             OBJdest_source.hide_viewport=True
@@ -699,7 +699,7 @@ class jwcutoperator(bpy.types.Operator):
                 vg_vect_insens.add(insens_verts, 1.0, 'ADD')  
                 bpy.ops.object.mode_set(mode='EDIT')   
                 #adding volume
-                bpy.ops.transform.shrink_fatten(value=thick, use_even_offset=False, mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                bpy.ops.transform.shrink_fatten(value=thick, use_even_offset=False, mirror=False)
                 
                 #adding neighbour edges and verts to selection
                 for i in bmesh.from_edit_mesh(bpy.context.active_object.data).edges:
@@ -1065,10 +1065,19 @@ def register():
     kmi.properties.name=jwcarvermenu.bl_idname
     #kmi=km.keymap_items.new(jwcarveoperator.bl_idname, 'SPACE', 'PRESS', ctrl=True, shift=True)
     #bpy.ops.wm.call_menu(name="jw.carvermenu")
-    addon_keymaps.append(km)
+    addon_keymaps.append((km, kmi))
 
+def remove_hotkey():
+    wm = bpy.context.window_manager
+    kc = wm.keyconfigs.addon
+    km = kc.keymaps['Object Mode']    
+    for km, kmi in addon_keymaps:
+        km.keymap_items.remove(kmi)
+        wm.keyconfigs.addon.keymaps.remove(km)
+    addon_keymaps.clear()
 def unregister():
     bpy.utils.unregister_class(jwsettings)
+    bpy.utils.unregister_class(jwcutoperator) 
     bpy.utils.unregister_class(jwcarveoperator)
     bpy.utils.unregister_class(jwcarvermenu)
     bpy.utils.unregister_class(jwinsertoperator)
@@ -1081,7 +1090,7 @@ def unregister():
     bpy.utils.unregister_class(jwmirrory)  
     bpy.utils.unregister_class(jwmirrorz)  
     del bpy.types.Scene.axis_enum 
-    km.keymap_items.remove(kmi)
+    remove_hotkey()
     addon_keymaps.clear()
 
 if __name__ == "__main__":
